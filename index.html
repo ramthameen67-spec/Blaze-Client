@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blaze Client (Gemini)</title>
+<meta name="description" content="Blaze Client: a Gemini-powered chatbot, game builder, image maker and voice assistant that runs entirely in your browser.">
+<meta name="theme-color" content="#ff5a1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E🔥%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#fff6ef;--pan:#fff;--tx:#2b1810;--mu:#80675b;--bd:#f0d9cb;--em:#ff5a1f;--fl:#ffb21a;--ut:#fff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#110c0a;--pan:#1c1411;--tx:#f7ece5;--mu:#b39d91;--bd:#3a2a22;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#110c0a;--pan:#1c1411;--tx:#f7ece5;--mu:#b39d91;--bd:#3a2a22;color-scheme:dark}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;display:flex;flex-direction:column;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}
+header{display:flex;align-items:center;gap:10px;padding:10px 14px 6px}
+.logo{font-size:26px}
+h1{margin:0;font-size:20px;font-weight:900;letter-spacing:.5px;background:linear-gradient(90deg,var(--em),var(--fl));-webkit-background-clip:text;background-clip:text;color:transparent}
+.st{margin-left:auto;cursor:pointer;font-size:12px;color:var(--mu);display:flex;align-items:center;gap:6px}
+.st i{width:8px;height:8px;border-radius:50%;background:var(--mu)}.st.on i{background:var(--em);box-shadow:0 0 8px var(--em)}
+nav{display:flex;gap:6px;padding:4px 14px 8px}
+nav button{flex:1;min-width:0;white-space:nowrap;padding:8px 4px;border:1px solid var(--bd);background:var(--pan);color:var(--mu);border-radius:10px;font:inherit;font-size:13.5px;font-weight:700}
+nav button.on{background:linear-gradient(135deg,var(--em),var(--fl));color:#fff;border-color:transparent}
+.view{display:none;flex:1;min-height:0;flex-direction:column}.view.on{display:flex}
+#log{flex:1;overflow:auto;padding:6px 14px 12px;display:flex;flex-direction:column;gap:10px}
+.b{max-width:88%;padding:10px 13px;border-radius:16px;word-wrap:break-word;overflow-wrap:anywhere}
+.b.assistant{background:var(--pan);border:1px solid var(--bd);align-self:flex-start;border-bottom-left-radius:4px}
+.b.user{background:linear-gradient(135deg,var(--em),#ff9a1a);color:var(--ut);align-self:flex-end;border-bottom-right-radius:4px}
+.b div+div,.b pre{margin-top:8px}
+pre{background:#0d0908;color:#ffd9bd;padding:10px;border-radius:10px;overflow-x:auto;font-size:12px}
+code{background:rgba(255,120,40,.15);padding:1px 5px;border-radius:5px}
+.gc{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:9px 11px;border-radius:12px;border:1px dashed var(--em);font-weight:700}
+.gc button,.chips button{border:0;border-radius:9px;padding:7px 12px;font:inherit;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--em),var(--fl))}
+.fire{font-style:normal;display:inline-block;animation:fl .7s infinite alternate}
+@keyframes fl{to{transform:scale(1.25) rotate(8deg)}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chips button{background:var(--pan);color:var(--tx);border:1px solid var(--bd);font-weight:600}
+.dots span{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:var(--em);animation:d 1s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes d{50%{transform:translateY(-5px);opacity:.4}}
+.comp{display:flex;gap:8px;padding:8px 14px 10px;align-items:flex-end}
+textarea{flex:1;resize:none;max-height:120px;padding:10px 12px;border-radius:14px;border:1px solid var(--bd);background:var(--pan);color:var(--tx);font:inherit}
+#send{width:44px;height:44px;padding:0;border:0;border-radius:50%;font-size:18px;color:#fff;background:#ff7a1a;box-shadow:0 2px 8px rgba(255,122,26,.4)}
+.bar{display:flex;gap:6px;padding:0 14px 8px;align-items:center}
+.bar span{flex:1;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar button{border:1px solid var(--bd);background:var(--pan);color:var(--tx);border-radius:9px;padding:6px 9px;font:inherit;font-size:13px}
+#stage{flex:1;min-height:0;margin:0 14px 10px;border-radius:14px;overflow:hidden;background:#000;position:relative}
+#frame{width:100%;height:100%;border:0;display:none}
+.empty{padding:40px 24px;text-align:center;color:var(--mu)}
+.empty button{margin-top:12px;border:0;border-radius:10px;padding:10px 16px;color:#fff;font:inherit;font-weight:800;background:linear-gradient(135deg,var(--em),var(--fl))}
+#stage .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#d9b9a6}
+#lib{padding:4px 14px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.g{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--pan);border:1px solid var(--bd);border-radius:12px}
+.g b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.g small{color:var(--mu)}
+.g button{border:0;border-radius:9px;padding:7px 11px;font:inherit;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--em),var(--fl))}
+.g button.x{background:var(--bd);color:var(--tx)}
+.exit{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;z-index:5;border:0;border-radius:50%;width:38px;height:38px;background:rgba(0,0,0,.65);color:#fff;font-size:16px}
+body.full header,body.full nav,body.full .bar{display:none}body.full .exit{display:block}body.full #stage{margin:0;border-radius:0}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 80px);transform:translateX(-50%);background:#000d;color:#fff;padding:9px 14px;border-radius:12px;font-size:13px;max-width:86%;display:none;z-index:40;text-align:center}
+#set{display:none;position:fixed;inset:0;z-index:20;background:#000a;align-items:center;justify-content:center;padding:16px}
+#set.on{display:flex}#set .card{background:var(--pan);border:1px solid var(--bd);border-radius:16px;padding:16px;width:100%;max-width:420px}
+#set h2{margin:0 0 6px}#set p{margin:0 0 10px;color:var(--mu);font-size:13px}
+#set label{display:block;font-weight:700;font-size:13px;margin-top:8px}
+#set input{width:100%;margin-top:4px;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit}
+#set .row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+#set .row button{border:0;border-radius:9px;padding:9px 13px;font:inherit;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--em),var(--fl))}
+#set .row .x{background:var(--bd);color:var(--tx)}
+.im img{display:block;max-width:100%;border-radius:12px;border:1px solid var(--bd)}.im a{display:inline-block;margin-top:6px;font-size:13px;font-weight:800;color:var(--em);text-decoration:none}
+#plus{width:44px;height:44px;flex:none;border:1px solid var(--bd);border-radius:50%;background:var(--pan);color:var(--tx);font-size:24px;line-height:1;padding:0}
+.mrow{padding:2px 14px 0}.mc{position:relative;display:inline-block}.mc::after{content:'▾';position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--mu);font-size:12px}
+#msel{appearance:none;-webkit-appearance:none;border:1px solid var(--bd);background:var(--pan);color:var(--tx);border-radius:999px;padding:5px 28px 5px 12px;font:inherit;font-size:13px;font-weight:700}
+#ap{display:flex;gap:10px;padding:8px 14px 2px;overflow-x:auto}#ap:empty{display:none}.th{position:relative;flex:none}.th img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--bd);display:block}
+.th button{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border:0;border-radius:50%;background:#000c;color:#fff;font-size:11px;padding:0}
+.ua{display:block;max-width:100%;max-height:200px;border-radius:10px;margin-bottom:6px}
+#dr{position:fixed;inset:0;z-index:15;background:#0008;display:none}#dr.on{display:block}
+#dr .pn{position:absolute;left:0;top:0;bottom:0;width:min(82%,320px);background:var(--pan);border-right:1px solid var(--bd);padding:calc(env(safe-area-inset-top,0px) + 12px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);display:flex;flex-direction:column;gap:10px;animation:sl .18s ease-out}
+@keyframes sl{from{transform:translateX(-100%)}}
+.dh{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:17px}
+#nc{border:0;border-radius:9px;padding:7px 12px;font:inherit;font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--em),var(--fl))}
+#cl{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.ci{display:flex;align-items:center;gap:6px;padding:9px 10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg)}.ci.on{border-color:var(--em)}
+.ci b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;cursor:pointer}.ci button{border:0;background:none;color:var(--mu);font-size:15px}
+#set .card{max-height:100%;overflow:auto}#set textarea{width:100%;flex:none;margin-top:4px;padding:10px;border-radius:10px;background:var(--bg);font-size:15px}
+#ms,#as{position:fixed;inset:0;z-index:18;background:#0008;display:none;align-items:flex-end}#ms.on,#as.on{display:flex}
+.sh{width:100%;max-height:82%;overflow:auto;background:var(--pan);border:1px solid var(--bd);border-bottom:0;border-radius:22px 22px 0 0;padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 16px);animation:up .2s ease-out}
+@keyframes up{from{transform:translateY(100%)}}
+.sh-h{display:flex;align-items:center;gap:10px;font-size:18px}.sh-t{font-size:18px}#msb{border:0;background:none;color:var(--tx);font-size:22px;padding:0 4px}
+.mi{display:block;width:100%;text-align:left;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:14px;padding:12px 14px;margin-top:8px;font:inherit}
+.mi.on{border-color:var(--em);box-shadow:0 0 0 1px var(--em) inset}.mi b{font-size:16px}.mi small{display:block;color:var(--mu);margin-top:2px;font-size:13px}
+.tg{font-size:11px;font-weight:800;margin-left:8px;padding:2px 8px;border-radius:999px;background:rgba(255,120,40,.18);color:var(--em)}.mi .ck{float:right;color:var(--em);font-weight:900}
+.ag{display:flex;gap:10px;margin-top:12px}.ag button{flex:1;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:16px;padding:16px 6px;font:inherit;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:8px}.ag span{font-size:30px}
+.mrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#mb,#pl{border:1px solid var(--bd);background:var(--pan);color:var(--tx);border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;font-weight:700}
+.fl{width:56px;height:56px;border-radius:10px;border:1px solid var(--bd);background:var(--pan);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:20px}.fl small{font-size:9px;color:var(--mu);max-width:52px;overflow:hidden;white-space:nowrap}
+#cm{position:fixed;inset:0;z-index:18;background:#0008;display:none;align-items:flex-end}#cm.on{display:flex}
+#cmi{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit}
+#au{display:none;position:fixed;inset:0;z-index:30;background:var(--bg);align-items:center;justify-content:center;padding:16px;overflow:auto}#au.on{display:flex}
+#au .card{width:100%;max-width:420px;max-height:100%;overflow:auto;background:var(--pan);border:1px solid var(--bd);border-radius:16px;padding:16px}
+#au p{margin:0 0 10px;color:var(--mu);font-size:13px}#au label{display:block;font-weight:700;font-size:13px;margin-top:10px}
+#au input{width:100%;margin-top:4px;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit}
+#al{display:flex;flex-direction:column;gap:6px}#pwr{gap:8px;margin-top:8px}#pwr input{margin-top:0}#au .row{margin-top:14px}
+#au .row button,#pwb{border:0;border-radius:9px;padding:10px 14px;font:inherit;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--em),var(--fl))}
+.who{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--bd);padding-top:10px;font-weight:700}.who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who button{border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:9px;padding:6px 12px;font:inherit;font-size:13px}
+#send svg{display:block;margin:auto}
+#vo{display:none;position:fixed;inset:0;z-index:25;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}#vo.on{display:flex}
+#orb{width:150px;height:150px;border-radius:50%;background:#ff7a1a;display:flex;align-items:center;justify-content:center;box-shadow:0 0 50px rgba(255,90,31,.45);cursor:pointer;animation:pu 1.6s ease-in-out infinite}
+#orb svg{width:72px;height:72px}#orb rect{transform-box:fill-box;transform-origin:center;animation:wv .9s ease-in-out infinite alternate}
+#orb rect:nth-child(2){animation-delay:.15s}#orb rect:nth-child(3){animation-delay:.3s}#orb rect:nth-child(4){animation-delay:.45s}
+@keyframes wv{from{transform:scaleY(.45)}to{transform:scaleY(1.4)}}@keyframes pu{50%{transform:scale(1.07)}}
+#orb[data-s=think]{animation-duration:.7s}#orb[data-s=think] rect{animation:none}
+#vs{font-size:20px;font-weight:800}#vt{color:var(--mu);min-height:3.5em;max-width:92%;font-size:15px}
+#ve{border:1px solid var(--bd);background:var(--pan);color:var(--tx);border-radius:999px;padding:12px 26px;font:inherit;font-weight:800;margin-top:16px}
+#vl{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.vc{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 12px;border:1px solid var(--bd);border-radius:12px;background:var(--bg);color:var(--tx);font:inherit}
+.vc.on{border-color:#ff7a1a;box-shadow:0 0 0 1px #ff7a1a inset}.vc b{display:block}.vc small{display:block;color:var(--mu);font-size:12px}
+.vc i{font-style:normal;margin-left:auto;color:#fff;background:#ff7a1a;border-radius:8px;padding:5px 10px;font-weight:800;font-size:12px}
+.rd{display:block;margin-top:6px;border:0;background:none;font-size:15px;padding:2px 4px;opacity:.7}
+#mic{display:block;width:100%;margin-top:8px;border:0;border-radius:10px;padding:10px;font:inherit;font-weight:800;color:#fff;background:#ff7a1a}
+.b a{color:var(--em);font-weight:700}.b.user a{color:#fff}
+</style></head>
+<body>
+<header><button id="menu" aria-label="Saved chats" style="border:0;background:none;font-size:24px;color:var(--tx);padding:0 2px">☰</button><span class="logo">🔥</span><h1>BLAZE CLIENT</h1><div class="st" id="st"><i></i><span>no key</span></div><button id="gear" aria-label="Settings" style="border:0;background:none;font-size:20px">⚙️</button></header>
+<nav><button data-t="chat" class="on">💬 ChatBot</button><button data-t="code">🎮 Code Game</button><button data-t="games">📁 Games</button></nav>
+
+<section class="view on" id="v-chat">
+ <div id="log"></div>
+ <div id="ap"></div><div class="mrow"><button id="mb" aria-label="Choose model"></button><button id="pl" style="display:none">🕹 Player</button></div>
+ <div class="comp"><button id="plus" aria-label="Add image">+</button><input type="file" id="fc" accept="image/*" capture="environment" hidden><input type="file" id="fi" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden><input type="file" id="ff" multiple hidden accept="image/*,application/pdf,text/*,.md,.csv,.json,.js,.ts,.html,.css,.py,.xml,.yml,.yaml,.log,.java,.c,.cpp"><input type="file" id="fa" accept="audio/*" capture hidden><textarea id="in" rows="1" placeholder="Message Blaze…"></textarea><button id="send" aria-label="Send">➤</button></div>
+</section>
+
+<section class="view" id="v-play">
+ <div class="bar"><span id="gt">No game loaded</span><button id="rs">↻ Restart</button><button id="tw">🛠 Tweak</button><button id="cp">⧉ Code</button><button id="fs">⛶</button></div>
+ <div id="stage"><iframe id="frame" sandbox="allow-scripts" allow="autoplay"></iframe>
+  <div class="empty" id="pe"><div style="font-size:42px">🕹️</div><div>No game yet. Ask Blaze to forge one!</div><button id="goc">Build a game</button></div></div>
+</section>
+
+<section class="view" id="v-games"><div id="lib"></div></section>
+<div id="vo"><div id="orb" data-s="listen"><svg viewBox="0 0 24 24"><g fill="#fff"><rect x="3.6" y="9.25" width="2.4" height="5.5" rx="1.2"/><rect x="8.4" y="4.5" width="2.4" height="15" rx="1.2"/><rect x="13.2" y="6.75" width="2.4" height="10.5" rx="1.2"/><rect x="18" y="9" width="2.4" height="6" rx="1.2"/></g></svg></div><div id="vs">Listening…</div><div id="vt"></div><button id="ve">✕ End</button></div>
+<div id="cm"><div class="sh"><b class="sh-t" id="cmt"></b><div id="cmb"></div></div></div>
+<div id="au" class="on"><div class="card"><div style="font-size:42px;text-align:center">🔥</div><h2 style="text-align:center;margin:4px 0 2px">BLAZE CLIENT</h2><p id="ah" style="text-align:center"></p><div id="al"></div>
+<div id="pwr" style="display:none"><input id="pwi" type="password" placeholder="Passcode"><button id="pwb">Sign in</button></div>
+<label>New account<input id="an" maxlength="24" placeholder="Your name"></label><label>Passcode (optional)<input id="apw" type="password" placeholder="4+ characters, or leave empty"></label>
+<div class="row"><button id="mkb">Create &amp; sign in</button></div></div></div>
+<div id="ms"><div class="sh"><div class="sh-h"><button id="msb" aria-label="Back">←</button><b id="mst"></b></div><div id="msl"></div></div></div>
+<div id="as"><div class="sh"><b class="sh-t">Add to chat</b><div class="ag"><button data-a="c"><span>📷</span>Camera</button><button data-a="p"><span>🖼️</span>Photos</button><button data-a="f"><span>📁</span>Files</button></div></div></div>
+<div id="dr"><div class="pn"><div class="dh"><b>💬 Chats</b><button id="nc">+ New chat</button></div><div id="cl"></div><div class="who"><span id="who"></span><button id="so">Sign out</button></div></div></div>
+<div id="set"><div class="card"><h2>Settings</h2>
+<p>Get a free key at <b>aistudio.google.com/apikey</b>. Keys stay in this browser (never in the code) and go only to Google. Tip: create key 2 in a different Google project so it gets its own quota.</p>
+<label>API key 1<input id="key" type="password" autocomplete="off" placeholder="Paste your Gemini API key"></label>
+<label>API key 2 <small style="color:var(--mu);font-weight:400">backup, optional. Blaze switches to it when key 1 hits its limit.</small><input id="key2" type="password" autocomplete="off" placeholder="Paste a second key (optional)"></label>
+<label>Model<input id="mdl" list="ml" placeholder="gemini-flash-latest"></label>
+<datalist id="ml"><option value="gemini-flash-latest"><option value="gemini-3.5-flash"><option value="gemini-2.5-flash"><option value="gemini-2.5-pro"></datalist>
+<label>Image model<input id="imdl" list="il" placeholder="gemini-3.1-flash-image"></label>
+<datalist id="il"><option value="gemini-3.1-flash-image"><option value="gemini-2.5-flash-image"></datalist>
+<label>Blaze’s voice <small style="color:var(--mu);font-weight:400">tap one to pick it and hear it</small></label><div id="vl"></div>
+<label>Voice model<input id="tmdl" list="tl" placeholder="gemini-3.1-flash-tts-preview"></label><datalist id="tl"><option value="gemini-3.1-flash-tts-preview"></datalist>
+<label style="display:flex;align-items:center;gap:8px"><input id="ar" type="checkbox" style="width:auto;margin:0;padding:0"> Read Blaze’s replies out loud</label>
+<label style="display:flex;align-items:center;gap:8px"><input id="wsb" type="checkbox" style="width:auto;margin:0;padding:0"> Let Blaze search the web in ChatBot</label>
+<button id="mic">🎤 Test microphone</button>
+<label>Your name<input id="mn" placeholder="What should Blaze call you?"></label>
+<label>About you<textarea id="ma" rows="3" placeholder="Age, hobbies, favorite games, how you want Blaze to talk to you…"></textarea></label>
+<div class="row"><button id="ksave">Save</button><button id="kclear" class="x">Remove keys</button><button id="ktest" class="x">Test keys</button><button id="kx" class="x">Close</button></div></div></div>
+<button class="exit" id="ex" aria-label="Exit full screen">✕</button>
+<div id="toast"></div>
+
+<script>
+const $=s=>document.querySelector(s),F='`'.repeat(3);
+const SYS='You are Blaze Client, a smart, upbeat, confident game-dev AI with a little fire in your personality. You live inside an app that has a built-in player: any game you code is run instantly in a sandboxed iframe and the person plays it right there. '+
+'When asked for a game: reply with ONE short fun sentence, then ONE complete self-contained HTML file in a fenced code block (three backticks + html), then 1-2 short lines on the controls. '+
+'Game rules: single file, inline CSS and JS only, no external libraries, images, fonts or network requests, no localStorage or sessionStorage (it is sandboxed). Prefer canvas. Fill the whole window and resize with it. Support BOTH touch (on-screen buttons or swipe/tap, touch-action:none) and keyboard controls because the person may be on a phone. Include a <title>, score, game over screen and an easy restart. Make it fun, polished and juicy (colors, particles, sound via WebAudio optional). Keep the code compact (about 250 lines max) so it finishes. Plan the game loop, controls and game-over logic before writing, and mentally re-check the code for bugs (undefined variables, missing brackets, broken touch controls) before you answer. '+
+'When asked to change the game, output the FULL updated file again using the CURRENT GAME CODE as the base. For normal chat, answer briefly and stay in character. Never wrap code in anything except the one html block. Only write game code when the person actually asks you to build or change a game; if they are just chatting or asking a question, reply normally with NO code. '+
+'PERSONALITY: you are allowed to swear. Cuss freely and casually in chat like a hyped-up mate (damn, hell, shit, fuck, ass, bastard and so on) whenever it fits the vibe, and match the energy of the person. Keep it playful: never use slurs or aim hate at people or groups. Swearing is fine inside game text too if the person asks for it. '+
+'IMAGES: you CAN make images. When the person asks for a picture, image, art, drawing, logo, wallpaper, sprite, character, poster and so on, reply with ONE short line in character, then on its own line [[IMAGE: a detailed vivid description of the image to generate (subject, style, colors, lighting, composition)]]. Never say you cannot make images and never fake it with ASCII art or SVG. Games are still delivered as the one html code block.';
+const TAIL=SYS.slice(SYS.indexOf('PERSONALITY:')).replace(' Games are still delivered as the one html code block.','');
+const CHATSYS='You are Blaze, a smart, upbeat, confident AI with a little fire in your personality. This is the ChatBot tab: just talk. Answer questions, joke around, help with anything, and keep replies short and punchy unless asked for detail. Be accurate: think before you answer, say so when you are unsure instead of guessing, work through math and logic step by step, and use web search for anything recent or factual if you have it. NEVER build or output a game or big code files here. If the person wants a game made, tell them in one line to hop over to the Code Game tab. A short code snippet in plain markdown is fine only if they directly ask for one. '+TAIL;
+const CH=['🐍 Neon Snake','🚀 Space shooter','🧱 Breakout','🐦 Flappy-style bird','🏎️ Endless racer','🧠 Memory match'];
+let P='',acct=null;const LS={getItem:k=>localStorage.getItem(P+k),setItem:(k,v)=>localStorage.setItem(P+k,v),removeItem:k=>localStorage.removeItem(P+k)};
+const IM='gemini-3.1-flash-image',ALT='gemini-2.5-flash-image',SAFE=[{category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_ONLY_HIGH'}];
+let keys=['',''],ki=0,cool=[0,0],web=true,key='',model='gemini-flash-latest',imodel=IM,S={code:{msgs:[],cid:null}},mode='chat',me={},att=[],chats=[],cid=null,msgs=[],cur=null,busy=false,ctrl=null,games=[];
+
+
+const persist=()=>{try{LS.setItem('blaze_games',JSON.stringify(games))}catch(e){}};
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const fmt=t=>esc(t).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/^[-*] +/gm,'• ').replace(/(^|[^*\w])\*([^*\n]+)\*(?!\*)/g,'$1<i>$2</i>').replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)"']+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>').replace(/^#{1,3} +(.+)$/gm,'<b>$1</b>').replace(/\n/g,'<br>');
+const dots='<span class="dots"><span></span><span></span><span></span></span>';
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>e.style.display='none',3800)}
+function setSt(on){const e=$('#st');e.className='st'+(on?' on':'');e.lastChild.textContent=on?'ready'+(keys[0]&&keys[1]?' · key '+(ki+1):''):'no key'}
+const wsOn=()=>web&&mode==='chat',oth=()=>keys.findIndex((k,i)=>k&&i!==ki);
+function swap(m){const o=oth();if(o<0)return false;ki=o;key=keys[o];try{LS.setItem('blaze_gki',o)}catch(e){}setSt(true);toast((m?m+' ':'')+'Switched to key '+(o+1)+' ⚡');return true}
+async function gf(u,o){
+ if(cool[ki]>Date.now()&&oth()>=0&&cool[oth()]<=Date.now())swap('Key '+(ki+1)+' is cooling down.');
+ for(let t=0;;t++){
+  o.headers['x-goog-api-key']=key;
+  const r=await fetch(u,o);
+  if(r.ok||t)return r;
+  let m='';try{m=(await r.clone().json()).error.message||''}catch(e){}
+  if(r.status===429||((r.status===400||r.status===403)&&/api key|quota|billing|denied/i.test(m))){cool[ki]=Date.now()+(r.status===429?6e4:6e5);if(swap('Key '+(ki+1)+(r.status===429?' hit its limit.':' was rejected.')))continue;return r}
+  if(r.status>=500){await new Promise(z=>setTimeout(z,1200));continue}
+  return r}
+}
+$('#st').onclick=()=>{if(keys[0]&&keys[1])swap('');else toast('Add a second key in ⚙️ to switch between two.')};
+
+
+const openSet=()=>{drawV();$('#tmdl').value=vmodel;$('#ar').checked=ar;$('#key').value=keys[0];$('#key2').value=keys[1];$('#wsb').checked=web;$('#mdl').value=model;$('#imdl').value=imodel;$('#mn').value=me.n||'';$('#ma').value=me.a||'';$('#set').classList.add('on')};
+$('#gear').onclick=openSet;$('#kx').onclick=()=>$('#set').classList.remove('on');
+$('#ksave').onclick=()=>{keys=[$('#key').value.trim(),$('#key2').value.trim()];if(keys[1]===keys[0])keys[1]='';if(!keys[ki])ki=keys[0]?0:1;key=keys[ki];web=$('#wsb').checked;model=$('#mdl').value.trim()||'gemini-flash-latest';imodel=$('#imdl').value.trim()||IM;me={n:$('#mn').value.trim(),a:$('#ma').value.trim()};vmodel=$('#tmdl').value.trim()||VM;ar=$('#ar').checked;try{LS.setItem('blaze_gkey',keys[0]);LS.setItem('blaze_gkey2',keys[1]);LS.setItem('blaze_gki',ki);LS.setItem('blaze_ws',web?'1':'0');LS.setItem('blaze_gmodel',model);LS.setItem('blaze_gimg',imodel);LS.setItem('blaze_me',JSON.stringify(me));LS.setItem('blaze_vmodel',vmodel);LS.setItem('blaze_ar',ar?'1':'0')}catch(e){}setSt(!!key);drawM();draw();$('#set').classList.remove('on');toast(key?'Saved. Blaze is ready.':'Key cleared')};
+$('#kclear').onclick=()=>{keys=['',''];key='';ki=0;$('#key').value='';$('#key2').value='';try{LS.removeItem('blaze_gkey');LS.removeItem('blaze_gkey2');LS.removeItem('blaze_gki')}catch(e){}setSt(false);toast('Keys removed')};
+$('#ktest').onclick=async()=>{const v=[$('#key').value.trim(),$('#key2').value.trim()];if(!v[0]&&!v[1]){toast('Paste a key first');return}toast('Testing…');const r=await Promise.all(v.map(async(k,i)=>{if(!k)return'';try{const x=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1',{headers:{'x-goog-api-key':k}});return'Key '+(i+1)+(x.ok?' works ✅':' rejected ❌')}catch(e){return'Key '+(i+1)+' network error'}}));toast(r.filter(Boolean).join(' · '))};
+async function gem(o,signal,onText){
+ const res=await gf('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':streamGenerateContent?alt=sse',{method:'POST',signal,headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:o.map(m=>({role:m.role==='assistant'?'model':'user',parts:(m.att||[]).map(a=>a.text!=null?{text:'[File: '+a.name+']\n'+a.text}:{inlineData:{mimeType:a.mime,data:a.data}}).concat([{text:m.content}])})),generationConfig:{maxOutputTokens:16000,temperature:0.8},safetySettings:SAFE,tools:wsOn()?[{google_search:{}}]:undefined})});
+ if(!res.ok){let d='';try{d=(await res.json()).error.message}catch(e){}if(res.status===400&&wsOn()&&/tool|search|ground/i.test(d)){web=false;toast('This model can’t search the web, so I turned that off.');return gem(o,signal,onText)}const er=new Error(d||'HTTP '+res.status);er.status=res.status;throw er}
+ const rd=res.body.getReader(),dec=new TextDecoder();let buf='',text='',fin='';
+ for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+  while((i=buf.indexOf('\n'))>=0){const ln=buf.slice(0,i).trim();buf=buf.slice(i+1);if(ln.indexOf('data:')!==0)continue;
+   try{const j=JSON.parse(ln.slice(5)),c=j.candidates&&j.candidates[0];if(c){((c.content&&c.content.parts)||[]).forEach(p=>{if(p.text&&!p.thought)text+=p.text});if(c.finishReason)fin=c.finishReason;onText(text)}}catch(e){}}}
+ return{text,truncated:fin==='MAX_TOKENS',blocked:fin==='SAFETY'||fin==='PROHIBITED_CONTENT'};
+}
+async function img(p,signal,m){
+ const res=await gf('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(m||imodel)+':generateContent',{method:'POST',signal,headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts:[{text:p}]}],generationConfig:{responseModalities:['TEXT','IMAGE']}})});
+ if(!res.ok){let d='';try{d=(await res.json()).error.message}catch(e){}if(res.status===404&&!m&&imodel!==ALT)return img(p,signal,ALT);const er=new Error(d||'HTTP '+res.status);er.status=res.status;throw er}
+ const j=await res.json(),c=j.candidates&&j.candidates[0],pt=((c&&c.content&&c.content.parts)||[]).find(x=>x.inlineData||x.inline_data);
+ if(!pt)throw new Error('no image came back (safety filter?). Try different wording.');
+ const d=pt.inlineData||pt.inline_data;return 'data:'+(d.mimeType||d.mime_type||'image/png')+';base64,'+d.data;
+}
+
+function setMode(m){S[mode]={msgs,cid};mode=m;msgs=S[m].msgs;cid=S[m].cid;att=[];drawAtt();$('#in').placeholder=m==='code'?'Describe a game to build…':'Message Blaze…';$('#pl').style.display=m==='code'?'':'none';draw()}
+function show(t){const m=t==='games'?null:t==='chat'?'chat':'code';if(m&&m!==mode){if(wait())return;setMode(m)}const v=t==='code'?'chat':t;document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===(t==='play'?'code':t)));if(t==='games')drawLib();if(t==='play')try{$('#frame').focus()}catch(e){}}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.t));
+
+function body(m,i,st){
+ const p=m.content.split(F);let h='';
+ p.forEach((s,k)=>{
+  if(k%2===0){s=s.replace(/\[\[IMAGE:[\s\S]*?(\]\]|$)/gi,'');if(s.trim())h+='<div>'+fmt(s.trim())+'</div>';return}
+  const nl=s.indexOf('\n'),lang=(nl<0?s:s.slice(0,nl)).trim().toLowerCase(),code=nl<0?'':s.slice(nl+1);
+  if(lang==='html'&&mode==='code'){
+   if(m.game)h+='<div class="gc"><span>🎮 '+esc(m.game.title)+'</span><button data-play="'+i+'">▶ Play</button></div>';
+   else if(st)h+='<div class="gc"><i class="fire">🔥</i><span>Forging game code… '+code.split('\n').length+' lines</span></div>';
+  }else h+='<pre>'+esc(code)+'</pre>';
+ });
+ if(m.ib)h+='<div class="gc"><i class="fire">🎨</i><span>Painting your image…</span></div>';
+ else if(m.img)h+='<div class="im"><img src="'+m.img+'" alt="Generated image"><a download="blaze-image.png" href="'+m.img+'">⬇ Save image</a></div>';
+ else if(m.ie)h+='<div class="gc"><span>🎨 '+(m.ie===2?'Image wasn’t saved with this chat.':'Image failed. Ask me again.')+'</span></div>';
+ if(!st&&m.content.trim()&&h)h+='<button class="rd" data-rd="'+i+'" aria-label="Read aloud">🔊</button>';
+ return h||dots;
+}
+function draw(){
+ const log=$('#log'),atBottom=log.scrollHeight-log.scrollTop-log.clientHeight<90;
+
+ const yo='Yo'+(me.n?' '+esc(me.n):'')+', I’m <b>Blaze</b> 🔥 ';
+ let h='<div class="b assistant"><div>'+yo+(mode==='code'?'Tell me what game you want and I’ll code it right here. When it’s ready it pops open in the player. Try one of these or describe your own idea:':'Chat with me about anything, or ask me to draw something 🎨. Want a game built? Hop over to the <b>Code Game</b> tab.')+'</div></div>';
+ if(!msgs.length&&mode==='code')h+='<div class="chips">'+CH.map((c,i)=>'<button data-chip="'+i+'">'+c+'</button>').join('')+'</div>';
+ msgs.forEach((m,i)=>{h+='<div class="b '+m.role+'">'+(m.role==='user'?ub(m):body(m,i,busy&&i===msgs.length-1))+'</div>'});
+ log.innerHTML=h;if(atBottom||busy)log.scrollTop=log.scrollHeight;
+ upd();
+}
+$('#log').onclick=e=>{
+ const rd=e.target.closest('[data-rd]');if(rd){unlock();if(act)stopSay();else say(msgs[+rd.dataset.rd].content);return}
+ const p=e.target.closest('[data-play]');if(p){const g=msgs[+p.dataset.play].game;if(g){load(g);show('play')}return}
+ const c=e.target.closest('[data-chip]');if(c)send('Make me a '+CH[+c.dataset.chip].replace(/^\S+\s/,'')+' game with great visuals');
+};
+function extract(c){
+ const r=c.match(/```html\s*\n([\s\S]*?)(?:```|$)/i);if(!r||r[1].trim().length<40)return null;
+ const code=r[1].trim();return{id:Date.now(),title:((code.match(/<title>([^<]*)<\/title>/i)||[])[1]||'Untitled game').trim(),code,t:Date.now()};
+}
+function payload(){
+ let o=msgs.slice(0,-1).map(m=>({role:m.role,content:m.role==='assistant'?m.content.replace(/```html[\s\S]*?(```|$)/gi,'[game code omitted]'):m.content||'(image attached)',att:m.att})).slice(mode==='chat'?-24:-10);
+ if(o[0].role!=='user')o=o.slice(1);
+ if(cur&&mode==='code')o[o.length-1].content+='\n\nCURRENT GAME CODE (the game now loaded in the player; only edit it if I actually ask for a change, otherwise just chat and do NOT output code):\n'+F+'html\n'+cur.code+'\n'+F;
+ o[0].content=sys()+'\n\n---\n\n'+o[0].content;return o;
+}
+const MODELS=[['gemini-flash-latest','Gemini Flash','Latest','Fast and smart. Blaze’s everyday brain.'],['gemini-pro-latest','Gemini Pro','Smartest','Thinks hardest. Slower, best for big games.'],['gemini-3.5-flash','Gemini 3.5 Flash','','Flash from the 3.5 family.'],['gemini-2.5-pro','Gemini 2.5 Pro','','Strong all-rounder from the 2.5 family.'],['gemini-2.5-flash','Gemini 2.5 Flash','','Quick and dependable.'],['gemini-2.5-flash-lite','Gemini 2.5 Flash-Lite','Fastest','Lightest and quickest. Simple games only.']];
+let mpage=0;
+function drawMS(){const cu=MODELS.some(m=>m[0]===model)?[]:[[model,model,'Custom','Set in Settings.']],L=mpage?MODELS.slice(3):cu.concat(MODELS.slice(0,3));$('#msb').style.display=mpage?'':'none';$('#mst').textContent=mpage?'More models':'Pick Blaze’s brain 🔥';
+ $('#msl').innerHTML=L.map(m=>'<button class="mi'+(m[0]===model?' on':'')+'" data-m="'+esc(m[0]).replace(/"/g,'&quot;')+'">'+(m[0]===model?'<span class="ck">✓</span>':'')+'<b>'+esc(m[1])+'</b>'+(m[2]?'<span class="tg">'+m[2]+'</span>':'')+'<small>'+m[3]+'</small></button>').join('')+(mpage?'':'<button class="mi" data-more="1"><span class="ck">›</span><b>More models</b><small>Older Gemini versions</small></button>')}
+function drawM(){$('#mb').textContent=((MODELS.find(m=>m[0]===model)||[0,model])[1])+' ▾'}
+const sys=()=>(mode==='code'?SYS:CHATSYS)+' It is now '+new Date().toLocaleString([],{dateStyle:'full',timeStyle:'short'})+'.'+(me.n||me.a?' ABOUT THE PERSON YOU ARE TALKING TO (use it naturally, never recite it): '+(me.n?'their name is '+me.n+'. ':'')+(me.a||''):'');
+const ub=m=>(m.att?m.att.map(a=>a.url?'<img class="ua" src="'+a.url+'" alt="">':'<div>'+(a.kind==='pdf'?'📄 ':'📎 ')+esc(a.name)+'</div>').join(''):m.na?'<div>📎 '+m.na+' attachment'+(m.na>1?'s':'')+' (not saved)</div>':'')+fmt(m.content);
+function drawAtt(){$('#ap').innerHTML=att.map((a,i)=>'<span class="th">'+(a.url?'<img src="'+a.url+'" alt="">':'<span class="fl">'+(a.kind==='pdf'?'📄':'📎')+'<small>'+esc(a.name).slice(0,14)+'</small></span>')+'<button data-r="'+i+'" aria-label="Remove">✕</button></span>').join('');upd()}
+function addFiles(fs){[...fs].slice(0,Math.max(0,5-att.length)).forEach(f=>{
+ if(/^image\//.test(f.type)){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height)),c=document.createElement('canvas'),x=c.getContext('2d');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);const u=c.toDataURL('image/jpeg',.85);att.push({kind:'img',name:f.name,mime:'image/jpeg',data:u.split(',')[1],url:u});drawAtt()};im.onerror=()=>toast('Couldn’t read that image');im.src=r.result};r.readAsDataURL(f)}
+ else if(f.type==='application/pdf'||/\.pdf$/i.test(f.name)){if(f.size>15e6){toast('That PDF is too big (15 MB max)');return}const r=new FileReader();r.onload=()=>{att.push({kind:'pdf',name:f.name,mime:'application/pdf',data:r.result.split(',')[1]});drawAtt()};r.readAsDataURL(f)}
+ else if(f.type.indexOf('text/')===0||/\.(txt|md|csv|json|js|ts|html|css|py|xml|ya?ml|log|java|c|cpp)$/i.test(f.name)){if(f.size>2e5){toast('Text files up to 200 KB');return}const r=new FileReader();r.onload=()=>{att.push({kind:'txt',name:f.name,text:String(r.result).slice(0,60000)});drawAtt()};r.readAsText(f)}
+ else toast('Can’t read that file type')})}
+const strip=m=>{const c=Object.assign({},m);if(c.att){c.na=c.att.length;delete c.att}if(c.img){delete c.img;c.ie=2}if(c.game)c.game={id:c.game.id,title:c.game.title,t:c.game.t};return c};
+function persistChats(){chats=chats.slice(0,40);const a=chats.map(c=>({id:c.id,title:c.title,t:c.t,mode:c.mode,pin:c.pin,msgs:c.msgs.map(strip)}));if(!a.length){try{LS.removeItem('blaze_chats')}catch(e){}return}for(let n=a.length;n>0;n=n>>1){try{LS.setItem('blaze_chats',JSON.stringify(a.slice(0,n)));return}catch(e){}}}
+function saveChat(){if(!msgs.length)return;let c=chats.find(x=>x.id===cid);if(!c){c={id:cid=Date.now(),title:(msgs[0].content||'Image chat').replace(/\s+/g,' ').slice(0,42),msgs,mode};chats.unshift(c)}c.msgs=msgs;c.t=Date.now();chats.sort(srt);persistChats()}
+const wait=()=>busy&&(toast('Hold on, Blaze is still working'),1);
+function drawChats(){$('#cl').innerHTML=chats.length?chats.map(c=>'<div class="ci'+(c.id===cid?' on':'')+'"><b data-o="'+c.id+'">'+(c.pin?'📌 ':'')+(c.mode==='chat'?'💬 ':'🎮 ')+esc(c.title)+'</b><button data-k="'+c.id+'" aria-label="Chat options">⋯</button></div>').join(''):'<div class="empty" style="padding:20px 8px">No saved chats yet.</div>'}
+function clearPlayer(){cur=null;const f=$('#frame');f.srcdoc='';f.style.display='none';$('#pe').style.display='';$('#gt').textContent='No game loaded'}
+function newChat(){if(wait())return;msgs=[];cid=null;att=[];drawAtt();if(mode==='code')clearPlayer();$('#dr').classList.remove('on');show(mode==='code'?'code':'chat');draw()}
+function openChat(id){if(wait())return;const c=chats.find(x=>x.id===id);if(!c)return;const m=c.mode||'code';show(m==='code'?'code':'chat');msgs=c.msgs;cid=id;att=[];drawAtt();msgs.forEach(x=>{if(x.game&&!x.game.code){const g=extract(x.content);if(g)x.game=g}});if(m==='code'){const lg=msgs.slice().reverse().find(x=>x.game);lg?load(lg.game):clearPlayer()}$('#dr').classList.remove('on');draw();$('#log').scrollTop=1e9}
+function delChat(id){if(wait())return;chats=chats.filter(c=>c.id!==id);persistChats();if(id===cid)newChat();else drawChats()}
+const WAVE='<svg viewBox="0 0 24 24" width="34" height="34"><g fill="#fff"><rect x="3.6" y="9.25" width="2.4" height="5.5" rx="1.2"/><rect x="8.4" y="4.5" width="2.4" height="15" rx="1.2"/><rect x="13.2" y="6.75" width="2.4" height="10.5" rx="1.2"/><rect x="18" y="9" width="2.4" height="6" rx="1.2"/></g></svg>';
+function upd(){$('#send').innerHTML=busy?'■':($('#in').value.trim()||att.length)?'➤':WAVE}
+const VM='gemini-3.1-flash-tts-preview',VO=[['Charon','Deep & smooth','🌑'],['Puck','Upbeat','⚡'],['Fenrir','Hyped','🐺'],['Orus','Firm','💪'],['Algenib','Gravelly','🪨']];
+let vm=false,rec=null,lis=0,vfail=0,vi=0,ar=false,vmodel=VM,spk=0,act=0,dfail=0,ax=null,src=null,endRec=0;
+const SRC=()=>window.SpeechRecognition||window.webkitSpeechRecognition;
+function drawV(){$('#vl').innerHTML=VO.map((v,i)=>'<button class="vc'+(i===vi?' on':'')+'" data-v="'+i+'"><span style="font-size:22px">'+v[2]+'</span><div><b>'+v[0]+'</b><small>'+v[1]+'</small></div><i>▶</i></button>').join('')}
+$('#vl').onclick=e=>{const b=e.target.closest('[data-v]');if(!b)return;unlock();vi=+b.dataset.v;try{LS.setItem('blaze_voice',VO[vi][0])}catch(x){}drawV();say('Yo, I’m '+VO[vi][0]+'. How do I sound?')};
+const vset=(st,t,x)=>{$('#orb').dataset.s=st;$('#vs').textContent=t;if(x!=null)$('#vt').textContent=x};
+async function askMic(q){
+ const no=()=>{toast(/^(file|content):/.test(location.protocol)?'Chrome blocks the mic on saved files. Use your Blaze app (it works there), host the page on https, or record a clip.':'No mic access here. Record a voice clip with your phone’s recorder and I’ll answer it.');if(q)try{$('#fa').click()}catch(e){}return false};
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return no();
+ try{const m=await navigator.mediaDevices.getUserMedia({audio:true});m.getTracks().forEach(t=>t.stop());if(!q)toast('Mic allowed ✅');return true}
+ catch(e){if(e&&e.name==='NotFoundError'){toast('No microphone found on this device.');return false}return no()}}
+$('#mic').onclick=()=>askMic();
+function startVoice(){unlock();if(!key){openSet();toast('Add your Gemini API key first');return}askMic(1).then(ok=>{if(!ok)return;vm=true;vfail=0;$('#vo').classList.add('on');listen()})}
+function endVoice(){vm=false;lis=0;try{rec&&rec.abort()}catch(e){}stopSay();if(busy&&ctrl)ctrl.abort();$('#vo').classList.remove('on')}
+function listen(){if(!vm||lis)return;listenG()}
+function listenSR(){if(!vm||lis)return;lis=1;let got='',done=false;rec=new (SRC())();rec.lang=navigator.language||'en-US';rec.interimResults=true;rec.continuous=false;vset('listen','Listening…','');
+ rec.onresult=e=>{got='';for(const r of e.results)got+=r[0].transcript;$('#vt').textContent=got};
+ rec.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){toast('Mic blocked. Allow microphone access for this page.');endVoice()}};
+ rec.onend=()=>{lis=0;if(!vm||done)return;done=true;got=got.trim();if(got)talk(got);else if(++vfail>=3){toast('Didn’t hear anything. Tap the wave button to try again.');endVoice()}else setTimeout(listen,250)};
+ try{rec.start()}catch(e){lis=0;setTimeout(listen,400)}}
+async function talk(t){vfail=0;vset('think','Thinking…',t);const n=msgs.length;await send(t);if(!vm)return;const m=msgs[msgs.length-1];if(msgs.length>n&&m&&m.role==='assistant'&&m.content.trim())say(m.content);else{vset('think','That didn’t work. Try again.','');setTimeout(listen,1500)}}
+function unlock(){try{ax=ax||new(window.AudioContext||window.webkitAudioContext)();if(ax.state!=='running')ax.resume()}catch(e){}}
+function stopSay(){spk++;act=0;try{src&&src.stop()}catch(e){}src=null;try{speechSynthesis.cancel()}catch(e){}}
+const chunk=(c,n)=>{const ps=c.match(/[^.!?]+[.!?]*\s*/g)||[c],q=[];let a='';ps.forEach(x=>{if((a+x).length>n&&a){q.push(a);a=x}else a+=x});if(a)q.push(a);return q};
+async function tts(t){
+ const r=await gf('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(vmodel)+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:t}]}],generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:VO[vi][0]}}}}})});
+ if(!r.ok){let d='';try{d=(await r.json()).error.message}catch(e){}throw new Error(d||'HTTP '+r.status)}
+ const j=await r.json(),c=j.candidates&&j.candidates[0],p=((c&&c.content&&c.content.parts)||[]).find(x=>x.inlineData||x.inline_data),d=p&&(p.inlineData||p.inline_data);
+ if(!d)throw new Error('no audio came back');
+ const bin=atob(d.data),n=bin.length>>1,rate=+(((d.mimeType||d.mime_type||'').match(/rate=(\d+)/)||[])[1])||24000,b=ax.createBuffer(1,n,rate),ch=b.getChannelData(0);
+ for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|bin.charCodeAt(2*i+1)<<8;if(v>32767)v-=65536;ch[i]=v/32768}
+ return b}
+const play=(b,id)=>new Promise(r=>{if(id!==spk||!ax)return r();const s=ax.createBufferSource();s.buffer=b;s.connect(ax.destination);src=s;s.onended=()=>{if(src===s)src=null;r()};s.start()});
+function sayDev(c,id){if(!window.speechSynthesis){if(vm&&id===spk)listen();return}
+ const q=chunk(c,180);try{speechSynthesis.cancel()}catch(e){}
+ q.forEach((x,i)=>{const u=new SpeechSynthesisUtterance(x);u.lang=navigator.language||'en-US';u.rate=1.05;u.pitch=.7;if(i===q.length-1)u.onend=u.onerror=()=>{if(id===spk){act=0;if(vm)listen()}};speechSynthesis.speak(u)})}
+async function say(t){
+ const c=t.replace(/```[\s\S]*?(```|$)/g,' ').replace(/\[\[IMAGE:[\s\S]*?(\]\]|$)/gi,' ').replace(/[*_`#>]/g,'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu,'').replace(/\s+/g,' ').trim();
+ stopSay();const id=spk;if(!c){if(vm)listen();return}
+ act=id;vset('talk','Blaze is talking…',c.slice(0,160));unlock();
+ const q=chunk(c,260);let i=0;
+ try{let nx=tts(q[0]);for(i=0;i<q.length;i++){const b=await nx;if(id!==spk)return;nx=i+1<q.length?tts(q[i+1]):null;if(nx)nx.catch(()=>{});await play(b,id)}}
+ catch(e){if(id!==spk)return;if(!dfail++)toast('Gemini voice failed: '+((e&&e.message)||'error').slice(0,90)+'. Using the device voice.');sayDev(q.slice(i).join(' '),id);return}
+ if(id===spk){act=0;if(vm)listen()}}
+
+async function stt(b,mime){
+ const d=await new Promise(r=>{const f=new FileReader();f.onload=()=>r(String(f.result).split(',')[1]);f.readAsDataURL(b)});
+ const res=await gf('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{inlineData:{mimeType:mime||b.type||'audio/wav',data:d}},{text:'Transcribe the speech in this audio word for word. Reply with ONLY the transcript. If there is no speech, reply with nothing.'}]}]})});
+ if(!res.ok){let m='';try{m=(await res.json()).error.message}catch(e){}throw new Error(m||'HTTP '+res.status)}
+ const j=await res.json(),c=j.candidates&&j.candidates[0];return((c&&c.content&&c.content.parts)||[]).filter(p=>p.text&&!p.thought).map(p=>p.text).join('').trim()}
+function wav(ch,sr){let n=0;ch.forEach(c=>n+=c.length);const k=Math.max(1,Math.round(sr/16000)),m=Math.floor(n/k),o=new Int16Array(m);let j=0,a=0,q=0;
+ for(const c of ch)for(let x=0;x<c.length;x++){a+=c[x];if(++q===k){if(j<m){const v=Math.max(-1,Math.min(1,a/k));o[j++]=v<0?v*32768:v*32767}a=0;q=0}}
+ const r=Math.round(sr/k),h=new DataView(new ArrayBuffer(44)),w=(i,t)=>{for(let z=0;z<t.length;z++)h.setUint8(i+z,t.charCodeAt(z))};
+ w(0,'RIFF');h.setUint32(4,36+m*2,true);w(8,'WAVEfmt ');h.setUint32(16,16,true);h.setUint16(20,1,true);h.setUint16(22,1,true);h.setUint32(24,r,true);h.setUint32(28,r*2,true);h.setUint16(32,2,true);h.setUint16(34,16,true);w(36,'data');h.setUint32(40,m*2,true);
+ return new Blob([h,o],{type:'audio/wav'})}
+function recWav(){return new Promise(async(res,rej)=>{
+ let ms;try{ms=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}})}catch(e){return rej(e)}
+ unlock();const sn=ax.createMediaStreamSource(ms),pr=ax.createScriptProcessor(4096,1,1),ch=[];let talked=0,last=Date.now(),t0=last;endRec=0;
+ pr.onaudioprocess=e=>{const d=new Float32Array(e.inputBuffer.getChannelData(0));ch.push(d);let s=0;for(let i=0;i<d.length;i+=8)s+=d[i]*d[i];if(Math.sqrt(s/(d.length/8))>.015){talked=1;last=Date.now()}};
+ sn.connect(pr);pr.connect(ax.destination);
+ const iv=setInterval(()=>{const n=Date.now();if(!(!vm||endRec||(talked&&n-last>1300)||n-t0>25000||(!talked&&n-t0>8000)))return;clearInterval(iv);try{pr.disconnect();sn.disconnect()}catch(e){}ms.getTracks().forEach(t=>t.stop());res(talked&&vm?wav(ch,ax.sampleRate):null)},100)})}
+async function listenG(){if(!vm||lis)return;lis=1;vset('listen','Listening…','');let w;
+ try{w=await recWav()}catch(e){lis=0;toast('Mic problem ('+((e&&e.name)||'error')+'). Tap the wave button to try again.');endVoice();return}
+ lis=0;if(!vm)return;let t='';
+ if(w){vset('think','Thinking…','');try{t=await stt(w,'audio/wav')}catch(e){toast('Couldn’t understand that: '+((e&&e.message)||'error').slice(0,80))}}
+ if(t)talk(t);else if(++vfail>=3){toast('Didn’t hear anything. Tap the wave button to try again.');endVoice()}else setTimeout(listen,250)}
+$('#fa').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(!key){openSet();return}unlock();toast('Listening to your clip…');
+ try{const t=await stt(f,(f.type||'audio/mp4').replace(/;.*/,''));if(!t){toast('Couldn’t hear any speech in that clip.');return}
+  await send(t);const m=msgs[msgs.length-1];if(m&&m.role==='assistant'&&m.content.trim())say(m.content)}catch(x){toast('Couldn’t read that clip: '+((x&&x.message)||'error').slice(0,80))}};
+const srt=(a,b)=>(b.pin?1:0)-(a.pin?1:0)||b.t-a.t;
+function loadAcct(){vi=0;ar=false;vmodel=VM;games=[];chats=[];me={};key='';keys=['',''];ki=0;web=true;model='gemini-flash-latest';imodel=IM;
+ try{games=JSON.parse(LS.getItem('blaze_games')||'[]')}catch(e){}
+ try{chats=JSON.parse(LS.getItem('blaze_chats')||'[]')}catch(e){}
+ try{me=JSON.parse(LS.getItem('blaze_me')||'{}')||{}}catch(e){}
+ try{vi=Math.max(0,VO.findIndex(v=>v[0]===LS.getItem('blaze_voice')));ar=LS.getItem('blaze_ar')==='1';vmodel=LS.getItem('blaze_vmodel')||VM;keys=[LS.getItem('blaze_gkey')||'',LS.getItem('blaze_gkey2')||''];ki=LS.getItem('blaze_gki')==='1'?1:0;if(!keys[ki])ki=keys[0]?0:1;key=keys[ki];web=LS.getItem('blaze_ws')!=='0';cool=[0,0];model=LS.getItem('blaze_gmodel')||model;imodel=LS.getItem('blaze_gimg')||imodel}catch(e){}
+ msgs=[];cid=null;S={code:{msgs:[],cid:null}};mode='chat';att=[];cur=null;busy=false;
+ setSt(!!key);clearPlayer();drawAtt();drawM();drawV();$('#in').placeholder='Message Blaze…';$('#pl').style.display='none';show('chat');draw()}
+const AC=()=>{try{return JSON.parse(localStorage.getItem('blaze_accts')||'[]')}catch(e){return[]}};
+const saveAC=a=>{try{localStorage.setItem('blaze_accts',JSON.stringify(a))}catch(e){toast('Couldn’t save the account')}};
+async function hsh(p,s){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s+p));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(const c of s+p)h=(h*33^c.charCodeAt(0))>>>0;return'x'+h}}
+function enter(a){P=a.id+'_';acct=a;try{localStorage.setItem('blaze_cur',a.id)}catch(e){}loadAcct();$('#au').classList.remove('on');$('#pwr').style.display='none';$('#who').textContent='👤 '+a.name}
+function drawAu(){const L=AC();$('#al').innerHTML=L.map(a=>'<div class="ci"><b data-s="'+a.id+'">👤 '+esc(a.name)+(a.h?' 🔒':'')+'</b><button data-rm="'+a.id+'" aria-label="Remove account">✕</button></div>').join('');$('#ah').textContent=L.length?'Pick your account or make a new one':'Make an account to get started'}
+let pend=null;
+async function mk(){const n=$('#an').value.trim(),pw=$('#apw').value;if(!n){toast('Enter a name');return}if(pw&&pw.length<4){toast('Passcode needs 4+ characters');return}
+ const L=AC(),a={id:'u'+Date.now().toString(36),name:n.slice(0,24),s:Math.random().toString(36).slice(2),h:''};if(pw)a.h=await hsh(pw,a.s);
+ try{if(!L.length&&!localStorage.getItem('blaze_adopted')){['blaze_games','blaze_chats','blaze_me','blaze_gkey','blaze_gmodel','blaze_gimg'].forEach(k=>{const v=localStorage.getItem(k);if(v!=null)localStorage.setItem(a.id+'_'+k,v)});localStorage.setItem('blaze_adopted','1')}
+ if(!localStorage.getItem(a.id+'_blaze_me'))localStorage.setItem(a.id+'_blaze_me',JSON.stringify({n:a.name,a:''}))}catch(e){}
+ L.push(a);saveAC(L);$('#an').value='';$('#apw').value='';enter(a)}
+let cmid=null;
+function chatMenu(id,st){const c=chats.find(x=>x.id===id);if(!c)return;cmid=id;$('#cmt').textContent=c.title;const b=$('#cmb');
+ if(st==='r')b.innerHTML='<input id="cmi" maxlength="60" value="'+esc(c.title).replace(/"/g,'&quot;')+'"><div class="ag"><button data-c="rs">Save</button><button data-c="x">Cancel</button></div>';
+ else if(st==='d')b.innerHTML='<p style="color:var(--mu)">Delete this chat for good?</p><div class="ag"><button data-c="ds">🗑 Delete</button><button data-c="x">Cancel</button></div>';
+ else b.innerHTML='<button class="mi" data-c="p"><b>'+(c.pin?'📌 Unpin':'📌 Pin to top')+'</b></button><button class="mi" data-c="r"><b>✏️ Rename</b></button><button class="mi" data-c="d"><b>🗑 Delete</b></button>';
+ $('#cm').classList.add('on');if(st==='r')setTimeout(()=>{const i=$('#cmi');if(i){i.focus();i.select()}},50)}
+async function send(text){
+ unlock();
+ text=(text||'').trim();if((!text&&!att.length)||busy)return;
+ if(!key){openSet();toast('Add your Gemini API key first');return}
+ $('#in').value='';$('#in').style.height='auto';
+ msgs.push({role:'user',content:text,att:att.splice(0)},{role:'assistant',content:''});drawAtt();const um=msgs[msgs.length-2],mine=msgs[msgs.length-1],undo=()=>{msgs.pop();msgs.pop();$('#in').value=text;att=um.att||[];drawAtt()};busy=true;ctrl=new AbortController();draw();
+ try{
+  const r=await gem(payload(),ctrl.signal,t=>{msgs[msgs.length-1].content=t;draw()});
+  msgs[msgs.length-1].content=r.text;if(!r.text.trim()){undo();toast(r.blocked?'Google’s safety filter blocked that one. Try rewording it.':'Blaze came back empty. Try again.')}else if(r.truncated)toast('Blaze hit his length limit. If the game looks cut off, say “finish the game”.');
+ }catch(e){
+  if(ctrl.signal.aborted){const t=(e&&e.text)||msgs[msgs.length-1].content;if(t)msgs[msgs.length-1].content=t;else undo()}
+  else{undo();const c=e&&e.status;
+   toast(c===429?(keys[0]&&keys[1]?'Both keys hit their rate limit. Give it a minute.':'Google says slow down (rate limit). Try again in a moment.'):(c===400||c===403)&&/key/i.test(e.message)?'Google rejected that API key. Check it in ⚙️.':c===404?'Model not found. Change it in ⚙️.':'Something fizzled: '+((e&&e.message)||'network error'))}
+ }
+ const m=msgs.includes(mine)?mine:null,ip=m&&(m.content.match(/\[\[IMAGE:([\s\S]*?)\]\]/i)||[])[1];
+ if(ip){m.ib=1;draw();try{m.img=await img(ip.trim(),ctrl.signal)}catch(e){if(!ctrl.signal.aborted){m.ie=1;toast('Image fizzled: '+((e&&e.message)||'network error'))}}m.ib=0}
+ busy=false;const g=m&&mode==='code'?extract(m.content):null;
+ if(g){m.game=g;games.unshift(g);games=games.slice(0,12);persist();load(g);setTimeout(()=>show('play'),500)}
+ draw();saveChat();
+ if(ar&&!vm&&m&&mode==='chat'&&m.content.trim())say(m.content);
+}
+function load(g){
+ cur=g;let c=g.code;if(/<head[^>]*>/i.test(c)&&!/name=["']viewport/i.test(c))c=c.replace(/<head[^>]*>/i,m=>m+'<meta name="viewport" content="width=device-width,initial-scale=1">');
+ const f=$('#frame');f.srcdoc=c;f.style.display='block';$('#pe').style.display='none';$('#gt').textContent=g.title;
+ f.onload=()=>{try{f.focus()}catch(e){}};
+}
+$('#rs').onclick=()=>{if(!cur)return;const f=$('#frame');f.srcdoc='';setTimeout(()=>load(cur),40)};
+$('#tw').onclick=()=>{show('code');const i=$('#in');i.value='Change it so ';i.focus()};
+$('#cp').onclick=async()=>{if(!cur)return;try{await navigator.clipboard.writeText(cur.code);toast('Game code copied')}catch(e){toast('Couldn’t copy here. Long-press the code in chat instead.')}};
+$('#fs').onclick=()=>{if(cur)document.body.classList.add('full')};
+$('#ex').onclick=()=>document.body.classList.remove('full');
+$('#goc').onclick=()=>show('code');
+function drawLib(){
+ const l=$('#lib');
+ if(!games.length){l.innerHTML='<div class="empty">Games Blaze builds are saved here on this device.</div>';return}
+ l.innerHTML=games.map((g,i)=>'<div class="g"><div style="flex:1;min-width:0"><b style="display:block">'+esc(g.title)+'</b><small>'+new Date(g.t).toLocaleDateString()+'</small></div><button data-p="'+i+'">▶ Play</button><button class="x" data-d="'+i+'" aria-label="Delete">✕</button></div>').join('');
+}
+$('#lib').onclick=e=>{
+ const p=e.target.closest('[data-p]'),d=e.target.closest('[data-d]');
+ if(p){load(games[+p.dataset.p]);show('play')}
+ else if(d){games.splice(+d.dataset.d,1);persist();drawLib()}
+};
+const inp=$('#in');
+inp.oninput=()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,120)+'px';upd()};
+inp.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&matchMedia('(pointer:fine)').matches){e.preventDefault();send(inp.value)}};
+$('#send').onclick=()=>busy?ctrl.abort():(inp.value.trim()||att.length)?send(inp.value):startVoice();
+$('#plus').onclick=()=>$('#as').classList.add('on');
+$('#as').onclick=e=>{const b=e.target.closest('[data-a]');if(b){$('#as').classList.remove('on');$({c:'#fc',p:'#fi',f:'#ff'}[b.dataset.a]).click()}else if(e.target.id==='as')$('#as').classList.remove('on')};
+['#fc','#fi','#ff'].forEach(i=>$(i).onchange=e=>{addFiles(e.target.files);e.target.value=''});
+$('#ap').onclick=e=>{const r=e.target.closest('[data-r]');if(r){att.splice(+r.dataset.r,1);drawAtt()}};
+inp.onpaste=e=>{const f=[...((e.clipboardData&&e.clipboardData.files)||[])].filter(x=>/^image\//.test(x.type));if(f.length){e.preventDefault();addFiles(f)}};
+$('#pl').onclick=()=>show('play');
+$('#mb').onclick=()=>{mpage=0;drawMS();$('#ms').classList.add('on')};
+$('#ms').onclick=e=>{if(e.target.id==='ms'){$('#ms').classList.remove('on');return}if(e.target.closest('#msb')){mpage=0;drawMS();return}const m=e.target.closest('[data-m]');if(e.target.closest('[data-more]')){mpage=1;drawMS()}else if(m){model=m.dataset.m;try{LS.setItem('blaze_gmodel',model)}catch(x){}drawM();$('#ms').classList.remove('on');toast('Brain swapped: '+$('#mb').textContent.replace(' ▾',''))}};
+$('#menu').onclick=()=>{drawChats();$('#dr').classList.add('on')};
+$('#dr').onclick=e=>{if(e.target.id==='dr')$('#dr').classList.remove('on')};
+$('#nc').onclick=()=>newChat();
+$('#cl').onclick=e=>{const o=e.target.closest('[data-o]'),k=e.target.closest('[data-k]');if(o)openChat(+o.dataset.o);else if(k)chatMenu(+k.dataset.k)};
+$('#cm').onclick=e=>{if(e.target.id==='cm'){$('#cm').classList.remove('on');return}const a=e.target.closest('[data-c]');if(!a)return;const c=chats.find(x=>x.id===cmid),k=a.dataset.c;if(!c){$('#cm').classList.remove('on');return}
+ if(k==='p'){c.pin=!c.pin;chats.sort(srt);persistChats();drawChats();$('#cm').classList.remove('on')}
+ else if(k==='r')chatMenu(cmid,'r');else if(k==='d')chatMenu(cmid,'d');
+ else if(k==='rs'){const v=$('#cmi').value.trim();if(v){c.title=v.slice(0,60);persistChats();drawChats()}$('#cm').classList.remove('on')}
+ else if(k==='ds'){$('#cm').classList.remove('on');delChat(cmid)}else $('#cm').classList.remove('on')};
+$('#mkb').onclick=mk;
+$('#ve').onclick=endVoice;
+$('#orb').onclick=()=>{const st=$('#orb').dataset.s;if(st==='talk'){stopSay();if(vm)listen()}else if(st==='listen'){endRec=1;try{rec.stop()}catch(e){}}};
+$('#al').onclick=e=>{const L=AC(),s=e.target.closest('[data-s]'),r=e.target.closest('[data-rm]');
+ if(s){const a=L.find(x=>x.id===s.dataset.s);if(!a)return;if(a.h){pend=a;$('#pwr').style.display='flex';$('#pwi').value='';$('#pwi').placeholder='Passcode for '+a.name;$('#pwi').focus()}else enter(a)}
+ else if(r){const a=L.find(x=>x.id===r.dataset.rm);if(a&&confirm('Delete '+a.name+' and all their chats on this device?')){Object.keys(localStorage).filter(k=>k.indexOf(a.id+'_')===0).forEach(k=>localStorage.removeItem(k));saveAC(L.filter(x=>x.id!==a.id));if(localStorage.getItem('blaze_cur')===a.id)localStorage.removeItem('blaze_cur');$('#pwr').style.display='none';drawAu()}}};
+$('#pwb').onclick=async()=>{if(!pend)return;if(await hsh($('#pwi').value,pend.s)!==pend.h){toast('Wrong passcode');return}enter(pend)};
+$('#so').onclick=()=>{if(wait())return;try{localStorage.removeItem('blaze_cur')}catch(e){}acct=null;P='';$('#dr').classList.remove('on');$('#set').classList.remove('on');drawAu();$('#au').classList.add('on')};
+draw();drawM();drawAtt();drawV();
+(()=>{const a=AC().find(x=>x.id===localStorage.getItem('blaze_cur'));drawAu();if(a)enter(a)})();
+</script></body></html>
